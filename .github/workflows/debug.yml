@@ -24,7 +24,9 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y autoconf automake libtool libtool-bin pkg-config
-          sdkmanager "ndk;28.0.13004108"
+          SDKMANAGER="${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then SDKMANAGER="${ANDROID_HOME}/cmdline-tools/bin/sdkmanager"; fi
+          "$SDKMANAGER" "ndk;28.0.13004108"
       - name: Build bundled Hamlib for Android USB
         env:
           ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/28.0.13004108
