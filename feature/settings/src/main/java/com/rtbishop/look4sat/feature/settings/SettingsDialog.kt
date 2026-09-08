@@ -26,6 +26,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -956,7 +958,7 @@ fun RadioControlDialog(
         onCancel = onDismiss,
         onAccept = onAccept
     ) {
-        Column(modifier = Modifier.padding(horizontal = padding)) {
+        Column(modifier = Modifier.verticalScroll(rememberScrollState()).padding(horizontal = padding)) {
 
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,

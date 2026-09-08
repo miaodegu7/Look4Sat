@@ -50,7 +50,7 @@ class HamlibUsbController(
                 usbBridge.start()
                 val civ = settings.civAddress.trim().removePrefix("0x")
                 if (civ.isNotEmpty()) require(civ.toInt(16) in 0..255) { "CI-V address must be hexadecimal 00-FF" }
-                handle = HamlibNative.open(settings.usbModelId, usbBridge.port, civ)
+                handle = HamlibNative.open(settings.usbModelId, usbBridge.port, if (civ.isEmpty()) "" else "0x$civ")
                 check(handle != 0L) { "Hamlib could not open the radio" }
                 lastError = null
                 true

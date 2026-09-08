@@ -27,6 +27,25 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
 
+      - name: Install native build tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y autoconf automake libtool libtool-bin pkg-config
+          SDKMANAGER="${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then SDKMANAGER="${ANDROID_HOME}/cmdline-tools/bin/sdkmanager"; fi
+          "$SDKMANAGER" "ndk;28.0.13004108"
+      - name: Build bundled Hamlib for Android USB
+        env:
+          ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/28.0.13004108
+        run: |
+          export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/28.0.13004108"
+          bash scripts/build-hamlib-android.sh
+      - name: Upload Hamlib source and notices
+        uses: actions/upload-artifact@v4
+        with:
+          name: hamlib-4.7.2-source
+          path: build/hamlib-source.tar.gz
+
       - name: Assemble Artifacts
         run: ./gradlew assembleRelease bundleRelease
 
@@ -78,4 +97,4 @@ jobs:
       - name: Create Release
         run: |
           gh release create $TAG_NAME --title=$TAG_NAME --generate-notes
-          gh release upload $TAG_NAME app/build/outputs/apk/release/look4sat.apk
+          gh release upload $TAG_NAME app/build/outputs/apk/release/look4sat.apk build/hamlib-source.tar.gz
