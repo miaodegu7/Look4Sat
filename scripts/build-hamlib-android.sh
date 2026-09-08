@@ -35,10 +35,10 @@ for ABI in arm64-v8a armeabi-v7a; do
       --without-libusb --without-readline --without-indi --without-cxx-binding \
       --without-python-binding --without-perl-binding --without-tcl-binding --disable-html-matrix
     make -j2
-    "$CXX" -shared -fPIC -O2 -Wl,-z,max-page-size=16384 -Wl,--no-undefined \
-      -I"$SOURCE/include" -I"$BUILD/include" \
-      "$ROOT/core/data/src/main/cpp/hamlib_jni.c" \
-      src/.libs/libhamlib.a -lm -llog -landroid -ldl -o "$OUT/liblook4sat_hamlib.so"
+    "$CC" -c -fPIC -O2 -I"$SOURCE/include" -I"$BUILD/include" \
+      "$ROOT/core/data/src/main/cpp/hamlib_jni.c" -o hamlib_jni.o
+    "$CXX" -shared -static-libstdc++ -Wl,-z,max-page-size=16384 -Wl,--no-undefined \
+      hamlib_jni.o src/.libs/libhamlib.a -lm -llog -landroid -ldl -o "$OUT/liblook4sat_hamlib.so"
     "$STRIP" --strip-unneeded "$OUT/liblook4sat_hamlib.so"
   )
 done
