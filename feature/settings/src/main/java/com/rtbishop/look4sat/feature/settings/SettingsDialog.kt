@@ -895,11 +895,20 @@ fun RadioControlDialog(
     val baudRate = rememberSaveable { mutableIntStateOf(initialSettings.baudRate) }
     val selectingFor = rememberSaveable { mutableStateOf("") } // "tx", "rx", or ""
 
+    val hamlibHost = rememberSaveable { mutableStateOf(initialSettings.hamlibHost) }
+    val hamlibPort = rememberSaveable { mutableStateOf(initialSettings.hamlibPort.toString()) }
+    val hamlibRxVfo = rememberSaveable { mutableStateOf(initialSettings.hamlibRxVfo) }
+    val hamlibTxVfo = rememberSaveable { mutableStateOf(initialSettings.hamlibTxVfo) }
+    val isHamlib = radioModel.value == RadioControlSettings.MODEL_HAMLIB
+    val validHamlib = hamlibHost.value.isNotBlank() &&
+        hamlibHost.value.none { it.isWhitespace() || it == '/' } &&
+        hamlibPort.value.toIntOrNull() in 1..65535 &&
+        (!splitMode.value || hamlibRxVfo.value != hamlibTxVfo.value)
     val isIcom = radioModel.value == RadioControlSettings.MODEL_ICOM_IC705
-    val isSingleRadio = isIcom && splitMode.value
+    val isSingleRadio = (isIcom || isHamlib) && splitMode.value
 
     // Reset split mode when switching away from IC-705
-    if (!isIcom && splitMode.value) splitMode.value = false
+    if (!isIcom && !isHamlib && splitMode.value) splitMode.value = false
 
     val baudRates = if (isIcom) RadioControlSettings.BAUD_RATES_ICOM
     else RadioControlSettings.BAUD_RATES_YAESU
@@ -907,7 +916,8 @@ fun RadioControlDialog(
     // If current baud rate is not in the new list, default to the first available
     if (baudRate.intValue !in baudRates) baudRate.intValue = baudRates.first()
 
-    val onAccept = {
+    val onAccept: () -> Unit = {
+        if (!isHamlib || !enabled.value || validHamlib) {
         onSave(
             RadioControlSettings(
                 enabled = enabled.value,
@@ -917,10 +927,15 @@ fun RadioControlDialog(
                 txRadioName = txName.value,
                 rxRadioName = if (isSingleRadio) "" else rxName.value,
                 baudRate = baudRate.intValue,
-                splitMode = splitMode.value
+                splitMode = splitMode.value,
+                hamlibHost = hamlibHost.value.trim(),
+                hamlibPort = hamlibPort.value.toIntOrNull() ?: 4532,
+                hamlibRxVfo = hamlibRxVfo.value,
+                hamlibTxVfo = hamlibTxVfo.value
             )
         )
         onDismiss()
+        }
     }
 
     ConfirmDialog(
@@ -945,7 +960,7 @@ fun RadioControlDialog(
                 fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.primary
             )
-            Row(
+            FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(2.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -968,7 +983,7 @@ fun RadioControlDialog(
             }
             Spacer(modifier = Modifier.height(6.dp))
 
-            val isSplitModeAvailable = enabled.value && isIcom
+            val isSplitModeAvailable = enabled.value && (isIcom || isHamlib)
             val splitModeLabelColor = if (isSplitModeAvailable) {
                 MaterialTheme.colorScheme.onSurface
             } else {
@@ -992,6 +1007,28 @@ fun RadioControlDialog(
             }
             Spacer(modifier = Modifier.height(6.dp))
 
+            if (isHamlib) {
+                Text(stringResource(R.string.hamlib_help), fontSize = 13.sp)
+                OutlinedTextField(value = hamlibHost.value,
+                    onValueChange = { hamlibHost.value = it },
+                    label = { Text(stringResource(R.string.hamlib_host)) },
+                    singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = hamlibPort.value,
+                    onValueChange = { hamlibPort.value = it },
+                    label = { Text(stringResource(R.string.hamlib_port)) },
+                    singleLine = true, modifier = Modifier.fillMaxWidth())
+                listOf("RX" to hamlibRxVfo, "TX" to hamlibTxVfo).forEach { (label, state) ->
+                    Text("$label VFO")
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        RadioControlSettings.HAMLIB_VFOS.forEach { vfo ->
+                            FilterChip(selected = state.value == vfo,
+                                onClick = { state.value = vfo }, label = { Text(vfo) })
+                        }
+                    }
+                }
+                if (!validHamlib) Text(stringResource(R.string.hamlib_invalid),
+                    color = MaterialTheme.colorScheme.error)
+            } else {
             Text("Radio devices", fontWeight = FontWeight.Medium)
             Row(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -1090,6 +1127,7 @@ fun RadioControlDialog(
             Spacer(modifier = Modifier.height(6.dp))
         }
     }
+}
 }
 
 private fun compactRadioModelLabel(model: String): String = when (model) {

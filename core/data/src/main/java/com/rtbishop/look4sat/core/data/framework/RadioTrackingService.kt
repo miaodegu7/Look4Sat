@@ -31,6 +31,7 @@ import com.rtbishop.look4sat.core.domain.repository.RadioTrackingState
 import com.rtbishop.look4sat.core.domain.utility.TransponderMapper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -59,10 +60,21 @@ class RadioTrackingService(
     // ── Connection ──────────────────────────────────────────────────────────
 
     override suspend fun connectRadios() {
+        trackingJob?.cancelAndJoin()
+        stopTracking()
         txController?.disconnect()
         rxController?.disconnect()
 
         val rcSettings = settingsRepo.radioControlSettings.value
+        if (rcSettings.radioModel == RadioControlSettings.MODEL_HAMLIB) {
+            val radio = HamlibRadioController(rcSettings)
+            txController = radio
+            rxController = null
+            val connected = radio.connect()
+            _state.update { it.copy(txConnected = connected, rxConnected = connected,
+                errorMessage = if (connected) null else radio.lastError) }
+            return
+        }
         val txAddr     = rcSettings.txRadioAddress
         val rxAddr     = rcSettings.rxRadioAddress
         val isIcom     = rcSettings.radioModel == RadioControlSettings.MODEL_ICOM_IC705
@@ -122,6 +134,7 @@ class RadioTrackingService(
         else        Ft817Controller(bluetoothManager, address)
 
     override suspend fun disconnectRadios() {
+        trackingJob?.cancelAndJoin()
         stopTracking()
         txController?.disconnect()
         rxController?.disconnect()
@@ -147,7 +160,9 @@ class RadioTrackingService(
         val isIcom     = rcSettings.radioModel == RadioControlSettings.MODEL_ICOM_IC705
         val isSplit    = isIcom && rcSettings.splitMode
 
-        if (isSplit) {
+        if (rcSettings.radioModel == RadioControlSettings.MODEL_HAMLIB) {
+            trackingJob = appScope.launch { runHamlibTracking(transponder) }
+        } else if (isSplit) {
             trackingJob = appScope.launch { runSplitTracking(transponder, txBaseFreqHz) }
         } else {
             trackingJob = appScope.launch { runDualRadioTracking(transponder, txBaseFreqHz) }
@@ -292,6 +307,62 @@ class RadioTrackingService(
     }
 
     // ── IC-705 split-radio tracking ─────────────────────────────────────────
+
+    private suspend fun runHamlibTracking(transponder: SatRadio) {
+        val radio = txController as? HamlibRadioController
+        fun fail(message: String) {
+            _state.update { it.copy(isActive = false, errorMessage = message,
+                txConnected = radio?.isConnected == true, rxConnected = radio?.isConnected == true) }
+        }
+        if (radio == null || !radio.isConnected) {
+            fail("Connect to Hamlib first")
+            return
+        }
+        val settings = settingsRepo.radioControlSettings.value
+        val hasTx = transponder.uplinkLow != null
+        if (hasTx && (!settings.splitMode || settings.hamlibRxVfo == settings.hamlibTxVfo)) {
+            fail("Enable single-radio split and select different RX/TX VFOs")
+            return
+        }
+        val txBase = _state.value.txBaseFrequencyHz ?: transponder.uplinkLow?.let {
+            (it + (transponder.uplinkHigh ?: it)) / 2
+        }
+        val rxMode = transponder.downlinkMode ?: transponder.uplinkMode?.let {
+            TransponderMapper.mapUplinkModeToDownlinkMode(it, transponder.isInverted)
+        }
+        if (!radio.setVfo(true) || (hasTx && !radio.setSplitMode(true)) ||
+            (rxMode != null && !radio.setMode(rxMode)) ||
+            (hasTx && transponder.uplinkMode != null && !radio.setTxMode(transponder.uplinkMode!!))) {
+            fail(radio.lastError ?: "Hamlib VFO/split/mode setup failed")
+            return
+        }
+        _state.update { it.copy(txBaseFrequencyHz = txBase, errorMessage = null,
+            txMode = transponder.uplinkMode, rxMode = rxMode) }
+        var lastRx: Long? = null
+        var lastTx: Long? = null
+        while (currentCoroutineContext().isActive && _state.value.isActive) {
+            val state = _state.value
+            val pass = state.currentPass ?: break
+            val pos = satelliteRepo.getPosition(pass.orbitalObject,
+                settingsRepo.stationPosition.value, System.currentTimeMillis())
+            val base = state.txBaseFrequencyHz
+            val rxBase = base?.let { TransponderMapper.mapUplinkToDownlink(it, transponder) }
+                ?: transponder.downlinkLow
+            val rx = rxBase?.let { pos.getDownlinkFreq(it) }
+            val tx = base?.let { pos.getUplinkFreq(it) }
+            if ((rx != null && rx != lastRx && !radio.setWorkingFrequency(rx)) ||
+                (tx != null && tx != lastTx && !radio.setTxVfoFrequency(tx))) {
+                fail(radio.lastError ?: "Hamlib frequency update failed")
+                return
+            }
+            lastRx = rx
+            lastTx = tx
+            _state.update { it.copy(rxFrequencyHz = rx, txFrequencyHz = tx,
+                azimuth = Math.toDegrees(pos.azimuth), elevation = Math.toDegrees(pos.elevation),
+                distance = pos.distance) }
+            delay(1000)
+        }
+    }
 
     private suspend fun runSplitTracking(transponder: SatRadio, initialTxBaseFreqHz: Long?) {
         val radio = txController ?: return

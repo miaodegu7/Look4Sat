@@ -92,14 +92,20 @@ data class RadioControlSettings(
     val rxRadioName: String,
     val baudRate: Int,
     /** IC-705 only: use single-radio split-VFO mode instead of two radios. */
-    val splitMode: Boolean = false
+    val splitMode: Boolean = false,
+    val hamlibHost: String = "",
+    val hamlibPort: Int = 4532,
+    val hamlibRxVfo: String = "Main",
+    val hamlibTxVfo: String = "Sub"
 ) {
     companion object {
         const val MODEL_YAESU_FT817   = "Yaesu FT-817/818"
         const val MODEL_YAESU_FT857   = "Yaesu FT-857/897"
+        const val MODEL_HAMLIB = "Hamlib TCP"
+        val HAMLIB_VFOS = listOf("Main", "Sub", "VFOA", "VFOB")
         const val MODEL_ICOM_IC705    = "Icom IC-705"
 
-        val SUPPORTED_RADIOS = listOf(MODEL_YAESU_FT817, MODEL_YAESU_FT857, MODEL_ICOM_IC705)
+        val SUPPORTED_RADIOS = listOf(MODEL_YAESU_FT817, MODEL_YAESU_FT857, MODEL_ICOM_IC705, MODEL_HAMLIB)
 
         /** Baud rates available for Yaesu radios. */
         val BAUD_RATES_YAESU = listOf(4800, 9600, 38400)

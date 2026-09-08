@@ -26,6 +26,7 @@ import androidx.room.Room
 import com.rtbishop.look4sat.core.data.database.Look4SatDb
 import com.rtbishop.look4sat.core.data.framework.BluetoothReporter
 import com.rtbishop.look4sat.core.data.framework.Ft817Controller
+import com.rtbishop.look4sat.core.data.framework.HamlibRadioController
 import com.rtbishop.look4sat.core.data.framework.Ic705Controller
 import com.rtbishop.look4sat.core.data.framework.NetworkReporter
 import com.rtbishop.look4sat.core.data.framework.RadioTrackingService
@@ -115,7 +116,9 @@ class MainContainer(private val context: Context) : IMainContainer {
         val manager  = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         val settings = settingsRepo.radioControlSettings.value
         val address  = settings.txRadioAddress
-        return if (settings.radioModel == RadioControlSettings.MODEL_ICOM_IC705) {
+        return if (settings.radioModel == RadioControlSettings.MODEL_HAMLIB) {
+            HamlibRadioController(settings)
+        } else if (settings.radioModel == RadioControlSettings.MODEL_ICOM_IC705) {
             Ic705Controller(manager, address)
         } else {
             Ft817Controller(manager, address)
@@ -126,7 +129,9 @@ class MainContainer(private val context: Context) : IMainContainer {
         val manager  = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         val settings = settingsRepo.radioControlSettings.value
         val address  = settings.rxRadioAddress
-        return if (settings.radioModel == RadioControlSettings.MODEL_ICOM_IC705) {
+        return if (settings.radioModel == RadioControlSettings.MODEL_HAMLIB) {
+            HamlibRadioController(settings)
+        } else if (settings.radioModel == RadioControlSettings.MODEL_ICOM_IC705) {
             Ic705Controller(manager, address)
         } else {
             Ft817Controller(manager, address)

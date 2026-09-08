@@ -184,7 +184,7 @@
     <string name="prefs_privacy_url" translatable="false">https://sites.google.com/view/look4sat-privacy-policy/home</string>
 
     <string name="settings_paired_devices">Paired Bluetooth Devices:</string>
-    <string name="settings_split_mode">Split mode (IC-705 only)</string>
+    <string name="settings_split_mode">Single-radio split (IC-705 / Hamlib)</string>
     <string name="prefs_lat_prefix">Lat: %s°</string>
     <string name="prefs_lon_prefix">Lon: %s°</string>
     <string name="prefs_qth_prefix">Qth: %s</string>
@@ -286,4 +286,8 @@
     <!-- Main screen -->
     <string name="tracking_format">Tracking: %s</string>
 
+    <string name="hamlib_help">Connect to rigctld on your PC or Raspberry Pi (without --vfo). Configure model and serial port there. IC-910: verify RX/TX Main/Sub mapping on the radio. Tracking controls frequency only; stop tracking before manual tuning. Use a trusted LAN, not the public Internet.</string>
+    <string name="hamlib_host">Hamlib host (IP or hostname)</string>
+    <string name="hamlib_port">TCP port (default 4532)</string>
+    <string name="hamlib_invalid">Enter a host, port 1?65535, and different RX/TX VFOs for split.</string>
 </resources>

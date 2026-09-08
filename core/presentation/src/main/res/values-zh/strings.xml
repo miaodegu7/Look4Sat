@@ -142,7 +142,7 @@
     <string name="prefs_privacy_title">隐私政策</string>
 
     <string name="settings_paired_devices">已配对的蓝牙设备：</string>
-    <string name="settings_split_mode">分频模式（仅 IC-705）</string>
+    <string name="settings_split_mode">单台分频（IC-705 / Hamlib）</string>
     <string name="prefs_lat_prefix">纬度：%s°</string>
     <string name="prefs_lon_prefix">经度：%s°</string>
     <string name="prefs_qth_prefix">QTH：%s</string>
@@ -242,4 +242,8 @@
     <!-- Main screen -->
     <string name="tracking_format">跟踪：%s</string>
 
+    <string name="hamlib_help">连接电脑上的 rigctld（不加 --vfo）。型号和串口在服务端配置。IC-910 请核对 Main/Sub 收发对应关系。本版仅自动调频，手动调谐前请停止跟踪。仅在可信局域网使用。</string>
+    <string name="hamlib_host">Hamlib 主机（IP）</string>
+    <string name="hamlib_port">TCP 端口（默认 4532）</string>
+    <string name="hamlib_invalid">请填写有效主机和端口，RX/TX VFO 不能相同。</string>
 </resources>

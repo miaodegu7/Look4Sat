@@ -468,6 +468,10 @@ class SettingsRepo(
             putString(keyRxRadioName, settings.rxRadioName)
             putInt(keyRadioBaudRate, settings.baudRate)
             putBoolean(keyRadioSplitMode, settings.splitMode)
+            putString("hamlibHost", settings.hamlibHost)
+            putInt("hamlibPort", settings.hamlibPort)
+            putString("hamlibRxVfo", settings.hamlibRxVfo)
+            putString("hamlibTxVfo", settings.hamlibTxVfo)
         }
         _radioControlSettings.value = settings
     }
@@ -480,7 +484,11 @@ class SettingsRepo(
         txRadioName = preferences.getString(keyTxRadioName, null) ?: "TX Radio",
         rxRadioName = preferences.getString(keyRxRadioName, null) ?: "RX Radio",
         baudRate = preferences.getInt(keyRadioBaudRate, 4800),
-        splitMode = preferences.getBoolean(keyRadioSplitMode, false)
+        splitMode = preferences.getBoolean(keyRadioSplitMode, false),
+        hamlibHost = preferences.getString("hamlibHost", "") ?: "",
+        hamlibPort = preferences.getInt("hamlibPort", 4532),
+        hamlibRxVfo = preferences.getString("hamlibRxVfo", "Main") ?: "Main",
+        hamlibTxVfo = preferences.getString("hamlibTxVfo", "Sub") ?: "Sub"
     )
 
     private val keySatelliteOffsets = "satelliteOffsets"
