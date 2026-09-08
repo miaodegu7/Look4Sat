@@ -26,7 +26,7 @@ class HamlibUsbController(
     private val usbManager: UsbManager,
     private val settings: RadioControlSettings
 ) : IRadioController {
-    private var handle = 0L
+    @Volatile private var handle = 0L
     private var bridge: UsbSerialBridge? = null
     override var lastError: String? = null
         private set
@@ -46,8 +46,8 @@ class HamlibUsbController(
                     ?: error("USB serial port ${settings.usbPort} is unavailable")
                 val connection = usbManager.openDevice(device) ?: error("Could not open USB device")
                 val usbBridge = UsbSerialBridge(port, connection, settings)
-                usbBridge.start()
                 bridge = usbBridge
+                usbBridge.start()
                 val civ = settings.civAddress.trim().removePrefix("0x")
                 if (civ.isNotEmpty()) require(civ.toInt(16) in 0..255) { "CI-V address must be hexadecimal 00-FF" }
                 handle = HamlibNative.open(settings.usbModelId, usbBridge.port, civ)
@@ -108,7 +108,7 @@ private class UsbSerialBridge(
     private val connection: android.hardware.usb.UsbDeviceConnection,
     private val settings: RadioControlSettings
 ) {
-    private val server = ServerSocket(0, 1, InetAddress.getLoopbackAddress())
+    private val server = ServerSocket(0, 1, InetAddress.getByName("127.0.0.1"))
     val port: Int get() = server.localPort
     private var client: Socket? = null
     private var job: Job? = null
@@ -118,7 +118,9 @@ private class UsbSerialBridge(
         serial.dtr = settings.usbDtr
         serial.rts = settings.usbRts
         job = kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
+            try {
             client = runInterruptible { server.accept() }
+            server.close()
             val socket = client ?: return@launch
             val networkInput = socket.getInputStream()
             val networkOutput = socket.getOutputStream()
@@ -135,6 +137,11 @@ private class UsbSerialBridge(
                 val count = try { serial.read(data, 20) } catch (e: IOException) { break }
                 if (count > 0) { networkOutput.write(data, 0, count); networkOutput.flush(); moved = true }
                 if (!moved) delay(5)
+            }
+            } catch (_: IOException) {
+                // Closing USB or its socket ends the bridge; Hamlib reports the failed read.
+            } finally {
+                close()
             }
         }
     }
