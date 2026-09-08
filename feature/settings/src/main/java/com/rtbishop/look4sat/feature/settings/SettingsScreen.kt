@@ -176,6 +176,7 @@ private fun SettingsScreen(uiState: SettingsState, onAction: (SettingsAction) ->
     }
     if (dialogs.radioControl) {
         RadioControlDialog(
+            hamlibModels = uiState.hamlibModels,
             initialSettings = uiState.radioControlSettings,
             pairedBluetoothDevices = uiState.pairedBluetoothDevices,
             onDismiss = { dialogs.radioControl = false },

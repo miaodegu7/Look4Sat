@@ -35,6 +35,7 @@ internal class CoreDataPlugin : Plugin<Project> {
             ksp(libs.androidx.room.compiler)
             implementation(libs.kotlin.coroutines)
             implementation(libs.other.okhttp)
+            implementation(libs.other.usbserial)
         }
     }
 }

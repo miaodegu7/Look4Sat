@@ -40,6 +40,7 @@ interface IMainContainer {
     fun provideRxRadioController(): IRadioController
     fun provideAudioCapture(): IAudioCapture
     fun provideSaveImage(): ISaveImage
+    suspend fun provideHamlibModels(): List<Pair<Int, String>>
     fun providePairedBluetoothDevices(): List<Pair<String, String>>
 }
 

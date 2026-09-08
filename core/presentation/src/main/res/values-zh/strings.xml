@@ -246,4 +246,15 @@
     <string name="hamlib_host">Hamlib 主机（IP）</string>
     <string name="hamlib_port">TCP 端口（默认 4532）</string>
     <string name="hamlib_invalid">请填写有效主机和端口，RX/TX VFO 不能相同。</string>
+    <string name="usb_help">Local USB uses bundled Hamlib. IC-910: 3044, 19200 8N1, CI-V 60. Match the radio menu. Android 9+ ARM only.</string>
+    <string name="usb_native_missing">Bundled Hamlib unavailable on this device/build.</string>
+    <string name="usb_model_search">Search Hamlib model / ID</string>
+    <string name="usb_device">USB serial device</string>
+    <string name="usb_no_device">No USB device. Connect the OTG serial adapter.</string>
+    <string name="usb_authorize">Grant USB access</string>
+    <string name="usb_authorized">USB authorized</string>
+    <string name="usb_port">USB port index</string>
+    <string name="usb_baud">Serial baud rate</string>
+    <string name="usb_lines_warning">DTR/RTS may key an interface. Keep OFF unless required. Flow control: None.</string>
+    <string name="usb_civ">CI-V address (hex; blank = model default)</string>
 </resources>

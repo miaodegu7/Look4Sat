@@ -19,6 +19,10 @@ package com.rtbishop.look4sat.core.domain.repository
 
 interface IRadioController {
 
+    val lastError: String? get() = null
+
+    suspend fun setTxMode(mode: String): Boolean = false
+
     val isConnected: Boolean
 
     suspend fun connect(): Boolean

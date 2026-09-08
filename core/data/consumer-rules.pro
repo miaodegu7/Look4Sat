@@ -1,0 +1,1 @@
+﻿-keep class com.rtbishop.look4sat.core.data.framework.HamlibNative { *; }

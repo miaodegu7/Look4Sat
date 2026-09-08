@@ -26,6 +26,10 @@ import androidx.room.Room
 import com.rtbishop.look4sat.core.data.database.Look4SatDb
 import com.rtbishop.look4sat.core.data.framework.BluetoothReporter
 import com.rtbishop.look4sat.core.data.framework.Ft817Controller
+import com.rtbishop.look4sat.core.data.framework.HamlibNative
+import com.rtbishop.look4sat.core.data.framework.HamlibUsbController
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import com.rtbishop.look4sat.core.data.framework.HamlibRadioController
 import com.rtbishop.look4sat.core.data.framework.Ic705Controller
 import com.rtbishop.look4sat.core.data.framework.NetworkReporter
@@ -78,7 +82,7 @@ class MainContainer(private val context: Context) : IMainContainer {
     override val amSatRepo by lazy { AmSatRepository(remoteSource) }
     override val radioTrackingService: IRadioTrackingService by lazy {
         val manager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-        RadioTrackingService(appScope, manager, satelliteRepo, settingsRepo)
+        RadioTrackingService(appScope, manager, context.getSystemService(android.hardware.usb.UsbManager::class.java), satelliteRepo, settingsRepo)
     }
 
     override fun provideAddToCalendar(): IAddToCalendar = AddToCalendar(context)
@@ -116,7 +120,9 @@ class MainContainer(private val context: Context) : IMainContainer {
         val manager  = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         val settings = settingsRepo.radioControlSettings.value
         val address  = settings.txRadioAddress
-        return if (settings.radioModel == RadioControlSettings.MODEL_HAMLIB) {
+        return if (settings.radioModel == RadioControlSettings.MODEL_HAMLIB_USB) {
+            HamlibUsbController(appScope, context.getSystemService(android.hardware.usb.UsbManager::class.java), settings)
+        } else if (settings.radioModel == RadioControlSettings.MODEL_HAMLIB) {
             HamlibRadioController(settings)
         } else if (settings.radioModel == RadioControlSettings.MODEL_ICOM_IC705) {
             Ic705Controller(manager, address)
@@ -129,7 +135,9 @@ class MainContainer(private val context: Context) : IMainContainer {
         val manager  = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         val settings = settingsRepo.radioControlSettings.value
         val address  = settings.rxRadioAddress
-        return if (settings.radioModel == RadioControlSettings.MODEL_HAMLIB) {
+        return if (settings.radioModel == RadioControlSettings.MODEL_HAMLIB_USB) {
+            HamlibUsbController(appScope, context.getSystemService(android.hardware.usb.UsbManager::class.java), settings)
+        } else if (settings.radioModel == RadioControlSettings.MODEL_HAMLIB) {
             HamlibRadioController(settings)
         } else if (settings.radioModel == RadioControlSettings.MODEL_ICOM_IC705) {
             Ic705Controller(manager, address)
@@ -142,6 +150,16 @@ class MainContainer(private val context: Context) : IMainContainer {
         val manager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
         val displayManager = context.getSystemService(DisplayManager::class.java)
         return SensorsRepo(manager, displayManager)
+    }
+
+    override suspend fun provideHamlibModels(): List<Pair<Int, String>> = withContext(Dispatchers.IO) {
+        HamlibNative.mutex.withLock {
+            if (!HamlibNative.available) emptyList() else HamlibNative.models().lineSequence().mapNotNull {
+                val parts = it.split('\t', limit = 2)
+                val id = parts.firstOrNull()?.toIntOrNull()
+                if (id != null && parts.size == 2) id to parts[1] else null
+            }.sortedBy { it.second }.toList()
+        }
     }
 
     override fun providePairedBluetoothDevices(): List<Pair<String, String>> = buildList {

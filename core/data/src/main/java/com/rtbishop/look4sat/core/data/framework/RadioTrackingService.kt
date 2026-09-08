@@ -43,6 +43,7 @@ import kotlinx.coroutines.launch
 class RadioTrackingService(
     private val appScope: CoroutineScope,
     private val bluetoothManager: BluetoothManager,
+    private val usbManager: android.hardware.usb.UsbManager,
     private val satelliteRepo: ISatelliteRepo,
     private val settingsRepo: ISettingsRepo
 ) : IRadioTrackingService {
@@ -66,6 +67,15 @@ class RadioTrackingService(
         rxController?.disconnect()
 
         val rcSettings = settingsRepo.radioControlSettings.value
+        if (rcSettings.radioModel == RadioControlSettings.MODEL_HAMLIB_USB) {
+            val radio = HamlibUsbController(appScope, usbManager, rcSettings)
+            txController = radio
+            rxController = null
+            val connected = radio.connect()
+            _state.update { it.copy(txConnected = connected, rxConnected = connected,
+                errorMessage = if (connected) null else radio.lastError) }
+            return
+        }
         if (rcSettings.radioModel == RadioControlSettings.MODEL_HAMLIB) {
             val radio = HamlibRadioController(rcSettings)
             txController = radio
@@ -160,7 +170,8 @@ class RadioTrackingService(
         val isIcom     = rcSettings.radioModel == RadioControlSettings.MODEL_ICOM_IC705
         val isSplit    = isIcom && rcSettings.splitMode
 
-        if (rcSettings.radioModel == RadioControlSettings.MODEL_HAMLIB) {
+        if (rcSettings.radioModel == RadioControlSettings.MODEL_HAMLIB ||
+            rcSettings.radioModel == RadioControlSettings.MODEL_HAMLIB_USB) {
             trackingJob = appScope.launch { runHamlibTracking(transponder) }
         } else if (isSplit) {
             trackingJob = appScope.launch { runSplitTracking(transponder, txBaseFreqHz) }
@@ -309,7 +320,7 @@ class RadioTrackingService(
     // ── IC-705 split-radio tracking ─────────────────────────────────────────
 
     private suspend fun runHamlibTracking(transponder: SatRadio) {
-        val radio = txController as? HamlibRadioController
+        val radio = txController
         fun fail(message: String) {
             _state.update { it.copy(isActive = false, errorMessage = message,
                 txConnected = radio?.isConnected == true, rxConnected = radio?.isConnected == true) }

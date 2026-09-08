@@ -472,6 +472,16 @@ class SettingsRepo(
             putInt("hamlibPort", settings.hamlibPort)
             putString("hamlibRxVfo", settings.hamlibRxVfo)
             putString("hamlibTxVfo", settings.hamlibTxVfo)
+            putInt("usbModelId", settings.usbModelId)
+            putString("usbDeviceName", settings.usbDeviceName)
+            putInt("usbPort", settings.usbPort)
+            putInt("usbBaud", settings.usbBaud)
+            putInt("usbDataBits", settings.usbDataBits)
+            putInt("usbStopBits", settings.usbStopBits)
+            putInt("usbParity", settings.usbParity)
+            putBoolean("usbDtr", settings.usbDtr)
+            putBoolean("usbRts", settings.usbRts)
+            putString("civAddress", settings.civAddress)
         }
         _radioControlSettings.value = settings
     }
@@ -488,7 +498,17 @@ class SettingsRepo(
         hamlibHost = preferences.getString("hamlibHost", "") ?: "",
         hamlibPort = preferences.getInt("hamlibPort", 4532),
         hamlibRxVfo = preferences.getString("hamlibRxVfo", "Main") ?: "Main",
-        hamlibTxVfo = preferences.getString("hamlibTxVfo", "Sub") ?: "Sub"
+        hamlibTxVfo = preferences.getString("hamlibTxVfo", "Sub") ?: "Sub",
+        usbModelId = preferences.getInt("usbModelId", 3044),
+        usbDeviceName = preferences.getString("usbDeviceName", "") ?: "",
+        usbPort = preferences.getInt("usbPort", 0),
+        usbBaud = preferences.getInt("usbBaud", 19200),
+        usbDataBits = preferences.getInt("usbDataBits", 8),
+        usbStopBits = preferences.getInt("usbStopBits", 1),
+        usbParity = preferences.getInt("usbParity", 0),
+        usbDtr = preferences.getBoolean("usbDtr", false),
+        usbRts = preferences.getBoolean("usbRts", false),
+        civAddress = preferences.getString("civAddress", "") ?: ""
     )
 
     private val keySatelliteOffsets = "satelliteOffsets"

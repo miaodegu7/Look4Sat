@@ -58,6 +58,10 @@ class SettingsViewModel(
 
     init {
         viewModelScope.launch {
+            val models = container.provideHamlibModels()
+            _uiState.update { it.copy(hamlibModels = models) }
+        }
+        viewModelScope.launch {
             settingsRepo.stationPosition.collect { geoPos ->
                 _uiState.update {
                     it.copy(positionSettings = it.positionSettings.copy(isUpdating = false, stationPos = geoPos))

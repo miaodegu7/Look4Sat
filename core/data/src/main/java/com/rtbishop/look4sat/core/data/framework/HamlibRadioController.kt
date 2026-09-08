@@ -1,4 +1,4 @@
-﻿package com.rtbishop.look4sat.core.data.framework
+package com.rtbishop.look4sat.core.data.framework
 
 import com.rtbishop.look4sat.core.domain.model.RadioControlSettings
 import com.rtbishop.look4sat.core.domain.repository.IRadioController
@@ -22,7 +22,7 @@ class HamlibRadioController(private val settings: RadioControlSettings) : IRadio
     private var output: OutputStream? = null
     @Volatile override var isConnected = false
         private set
-    var lastError: String? = null
+    override var lastError: String? = null
         private set
 
     override suspend fun connect(): Boolean = mutex.withLock {
@@ -116,7 +116,7 @@ class HamlibRadioController(private val settings: RadioControlSettings) : IRadio
             command("set_split_vfo ${if (enabled) 1 else 0} ${settings.hamlibTxVfo}") != null
     override suspend fun setTxVfoFrequency(frequencyHz: Long): Boolean =
         frequencyHz > 0 && command("set_split_freq $frequencyHz") != null
-    suspend fun setTxMode(mode: String): Boolean {
+    override suspend fun setTxMode(mode: String): Boolean {
         val value = mode.uppercase(Locale.ROOT)
         return value.matches(Regex("[A-Z0-9]+")) && command("set_split_mode $value 0") != null
     }

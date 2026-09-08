@@ -96,16 +96,27 @@ data class RadioControlSettings(
     val hamlibHost: String = "",
     val hamlibPort: Int = 4532,
     val hamlibRxVfo: String = "Main",
-    val hamlibTxVfo: String = "Sub"
+    val hamlibTxVfo: String = "Sub",
+    val usbModelId: Int = 3044,
+    val usbDeviceName: String = "",
+    val usbPort: Int = 0,
+    val usbBaud: Int = 19200,
+    val usbDataBits: Int = 8,
+    val usbStopBits: Int = 1,
+    val usbParity: Int = 0,
+    val usbDtr: Boolean = false,
+    val usbRts: Boolean = false,
+    val civAddress: String = ""
 ) {
     companion object {
         const val MODEL_YAESU_FT817   = "Yaesu FT-817/818"
         const val MODEL_YAESU_FT857   = "Yaesu FT-857/897"
+        const val MODEL_HAMLIB_USB = "Hamlib USB"
         const val MODEL_HAMLIB = "Hamlib TCP"
         val HAMLIB_VFOS = listOf("Main", "Sub", "VFOA", "VFOB")
         const val MODEL_ICOM_IC705    = "Icom IC-705"
 
-        val SUPPORTED_RADIOS = listOf(MODEL_YAESU_FT817, MODEL_YAESU_FT857, MODEL_ICOM_IC705, MODEL_HAMLIB)
+        val SUPPORTED_RADIOS = listOf(MODEL_YAESU_FT817, MODEL_YAESU_FT857, MODEL_ICOM_IC705, MODEL_HAMLIB, MODEL_HAMLIB_USB)
 
         /** Baud rates available for Yaesu radios. */
         val BAUD_RATES_YAESU = listOf(4800, 9600, 38400)

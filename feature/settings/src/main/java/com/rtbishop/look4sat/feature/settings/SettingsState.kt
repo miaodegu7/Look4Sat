@@ -43,6 +43,7 @@ data class SettingsState(
     val radioControlSettings: RadioControlSettings,
     val dataSourcesSettings: DataSourcesSettings,
     val dataSourcesStatus: Map<String, Int> = emptyMap(),
+    val hamlibModels: List<Pair<Int, String>> = emptyList(),
     val pairedBluetoothDevices: List<Pair<String, String>> = emptyList()
 )
 

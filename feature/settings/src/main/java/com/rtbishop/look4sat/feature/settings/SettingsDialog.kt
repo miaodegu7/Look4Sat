@@ -879,6 +879,7 @@ private fun OutputChannelSection(
 
 @Composable
 fun RadioControlDialog(
+    hamlibModels: List<Pair<Int, String>>,
     initialSettings: RadioControlSettings,
     pairedBluetoothDevices: List<Pair<String, String>>,
     onDismiss: () -> Unit,
@@ -899,16 +900,18 @@ fun RadioControlDialog(
     val hamlibPort = rememberSaveable { mutableStateOf(initialSettings.hamlibPort.toString()) }
     val hamlibRxVfo = rememberSaveable { mutableStateOf(initialSettings.hamlibRxVfo) }
     val hamlibTxVfo = rememberSaveable { mutableStateOf(initialSettings.hamlibTxVfo) }
+    val usb = remember { mutableStateOf(initialSettings) }
+    val isUsb = radioModel.value == RadioControlSettings.MODEL_HAMLIB_USB
     val isHamlib = radioModel.value == RadioControlSettings.MODEL_HAMLIB
     val validHamlib = hamlibHost.value.isNotBlank() &&
         hamlibHost.value.none { it.isWhitespace() || it == '/' } &&
         hamlibPort.value.toIntOrNull() in 1..65535 &&
         (!splitMode.value || hamlibRxVfo.value != hamlibTxVfo.value)
     val isIcom = radioModel.value == RadioControlSettings.MODEL_ICOM_IC705
-    val isSingleRadio = (isIcom || isHamlib) && splitMode.value
+    val isSingleRadio = (isIcom || isHamlib || isUsb) && splitMode.value
 
     // Reset split mode when switching away from IC-705
-    if (!isIcom && !isHamlib && splitMode.value) splitMode.value = false
+    if (!isIcom && !isHamlib && !isUsb && splitMode.value) splitMode.value = false
 
     val baudRates = if (isIcom) RadioControlSettings.BAUD_RATES_ICOM
     else RadioControlSettings.BAUD_RATES_YAESU
@@ -931,7 +934,17 @@ fun RadioControlDialog(
                 hamlibHost = hamlibHost.value.trim(),
                 hamlibPort = hamlibPort.value.toIntOrNull() ?: 4532,
                 hamlibRxVfo = hamlibRxVfo.value,
-                hamlibTxVfo = hamlibTxVfo.value
+                hamlibTxVfo = hamlibTxVfo.value,
+                usbModelId = usb.value.usbModelId,
+                usbDeviceName = usb.value.usbDeviceName,
+                usbPort = usb.value.usbPort,
+                usbBaud = usb.value.usbBaud,
+                usbDataBits = usb.value.usbDataBits,
+                usbStopBits = usb.value.usbStopBits,
+                usbParity = usb.value.usbParity,
+                usbDtr = usb.value.usbDtr,
+                usbRts = usb.value.usbRts,
+                civAddress = usb.value.civAddress
             )
         )
         onDismiss()
@@ -983,7 +996,7 @@ fun RadioControlDialog(
             }
             Spacer(modifier = Modifier.height(6.dp))
 
-            val isSplitModeAvailable = enabled.value && (isIcom || isHamlib)
+            val isSplitModeAvailable = enabled.value && (isIcom || isHamlib || isUsb)
             val splitModeLabelColor = if (isSplitModeAvailable) {
                 MaterialTheme.colorScheme.onSurface
             } else {
@@ -1007,7 +1020,18 @@ fun RadioControlDialog(
             }
             Spacer(modifier = Modifier.height(6.dp))
 
-            if (isHamlib) {
+            if (isUsb) {
+                HamlibUsbSettings(usb.value, hamlibModels, onChange = { usb.value = it })
+                listOf("RX" to hamlibRxVfo, "TX" to hamlibTxVfo).forEach { (label, state) ->
+                    Text("$label VFO")
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        RadioControlSettings.HAMLIB_VFOS.forEach { vfo ->
+                            FilterChip(selected = state.value == vfo,
+                                onClick = { state.value = vfo }, label = { Text(vfo) })
+                        }
+                    }
+                }
+            } else if (isHamlib) {
                 Text(stringResource(R.string.hamlib_help), fontSize = 13.sp)
                 OutlinedTextField(value = hamlibHost.value,
                     onValueChange = { hamlibHost.value = it },
