@@ -308,4 +308,10 @@
     <string name="usb_parity_none">None</string>
     <string name="usb_parity_odd">Odd</string>
     <string name="usb_parity_even">Even</string>
+    <string name="usb_rx_vfo">Receive frequency control (RX)</string>
+    <string name="usb_tx_vfo">Transmit frequency control (TX)</string>
+    <string name="usb_vfo_main">Main band</string>
+    <string name="usb_vfo_sub">Sub band</string>
+    <string name="usb_vfo_a">VFO A</string>
+    <string name="usb_vfo_b">VFO B</string>
 </resources>

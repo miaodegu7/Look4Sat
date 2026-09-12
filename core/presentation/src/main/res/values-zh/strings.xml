@@ -264,4 +264,10 @@
     <string name="usb_parity_none">无校验</string>
     <string name="usb_parity_odd">奇校验</string>
     <string name="usb_parity_even">偶校验</string>
+    <string name="usb_rx_vfo">接收频率控制（RX）</string>
+    <string name="usb_tx_vfo">发射频率控制（TX）</string>
+    <string name="usb_vfo_main">主波段</string>
+    <string name="usb_vfo_sub">副波段</string>
+    <string name="usb_vfo_a">VFO A</string>
+    <string name="usb_vfo_b">VFO B</string>
 </resources>

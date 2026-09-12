@@ -49,6 +49,9 @@ internal fun HamlibUsbSettings(
     LaunchedEffect(settings.usbDeviceName) {
         while (true) {
             devices = manager.deviceList.values.toList()
+            if (devices.size == 1 && devices.none { it.deviceName == settings.usbDeviceName }) {
+                onChange(settings.copy(usbDeviceName = devices.single().deviceName))
+            }
             permitted = devices.find { it.deviceName == settings.usbDeviceName }?.let(manager::hasPermission) == true
             delay(1000)
         }

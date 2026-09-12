@@ -1015,11 +1015,16 @@ fun RadioControlDialog(
             if (isUsb) {
                 HamlibUsbSettings(usb.value, hamlibModels, onChange = { usb.value = it })
                 listOf("RX" to hamlibRxVfo, "TX" to hamlibTxVfo).forEach { (label, state) ->
-                    Text("$label VFO")
+                    Text(stringResource(if (label == "RX") R.string.usb_rx_vfo else R.string.usb_tx_vfo))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         RadioControlSettings.HAMLIB_VFOS.forEach { vfo ->
                             FilterChip(selected = state.value == vfo,
-                                onClick = { state.value = vfo }, label = { Text(vfo) })
+                                onClick = { state.value = vfo }, label = { Text(stringResource(when (vfo) {
+                                    "Main" -> R.string.usb_vfo_main
+                                    "Sub" -> R.string.usb_vfo_sub
+                                    "VFOA" -> R.string.usb_vfo_a
+                                    else -> R.string.usb_vfo_b
+                                })) })
                         }
                     }
                 }
