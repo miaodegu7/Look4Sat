@@ -286,19 +286,26 @@
     <!-- Main screen -->
     <string name="tracking_format">Tracking: %s</string>
 
-    <string name="hamlib_help">Connect to rigctld on your PC or Raspberry Pi (without --vfo). Configure model and serial port there. IC-910: verify RX/TX Main/Sub mapping on the radio. Tracking controls frequency only; stop tracking before manual tuning. Use a trusted LAN, not the public Internet.</string>
-    <string name="hamlib_host">Hamlib host (IP or hostname)</string>
-    <string name="hamlib_port">TCP port (default 4532)</string>
-    <string name="hamlib_invalid">Enter a host, port 1?65535, and different RX/TX VFOs for split.</string>
-    <string name="usb_help">Local USB uses bundled Hamlib. IC-910: 3044, 19200 8N1, CI-V 60. Match the radio menu. Android 9+ ARM only.</string>
-    <string name="usb_native_missing">Bundled Hamlib unavailable on this device/build.</string>
-    <string name="usb_model_search">Search Hamlib model / ID</string>
-    <string name="usb_device">USB serial device</string>
-    <string name="usb_no_device">No USB device. Connect the OTG serial adapter.</string>
-    <string name="usb_authorize">Grant USB access</string>
-    <string name="usb_authorized">USB authorized</string>
-    <string name="usb_port">USB port index</string>
-    <string name="usb_baud">Serial baud rate</string>
-    <string name="usb_lines_warning">DTR/RTS may key an interface. Keep OFF unless required. Flow control: None.</string>
-    <string name="usb_civ">CI-V address (hex; blank = model default)</string>
+    <string name="usb_help">Connect the radio using an OTG USB CAT / CI-V adapter. No network server is needed.</string>
+    <string name="usb_native_missing">Hamlib is unavailable. USB control requires Android 9+ on ARM.</string>
+    <string name="usb_model_search">Search manufacturer or model, e.g. IC-910</string>
+    <string name="usb_device">2. USB adapter</string>
+    <string name="usb_no_device">No USB adapter detected. Connect an OTG CAT cable.</string>
+    <string name="usb_authorize">Allow USB access</string>
+    <string name="usb_authorized">USB access allowed</string>
+    <string name="usb_baud">Baud rate</string>
+    <string name="usb_lines_warning">DTR/RTS can trigger transmission. Keep off unless your adapter requires them. No hardware flow control.</string>
+    <string name="usb_civ">CI-V address (hex; leave blank for model default)</string>
+    <string name="usb_step_model">1. Radio model</string>
+    <string name="usb_choose_model">Choose radio model</string>
+    <string name="usb_no_models">No matching radio models</string>
+    <string name="usb_auto_port">CAT port is detected automatically when connecting by reading the radio frequency. No port number is required.</string>
+    <string name="usb_step_serial">3. Match radio settings</string>
+    <string name="usb_advanced">Advanced serial settings</string>
+    <string name="usb_data_bits">Data bits</string>
+    <string name="usb_stop_bits">Stop bits</string>
+    <string name="usb_parity">Parity</string>
+    <string name="usb_parity_none">None</string>
+    <string name="usb_parity_odd">Odd</string>
+    <string name="usb_parity_even">Even</string>
 </resources>

@@ -468,13 +468,10 @@ class SettingsRepo(
             putString(keyRxRadioName, settings.rxRadioName)
             putInt(keyRadioBaudRate, settings.baudRate)
             putBoolean(keyRadioSplitMode, settings.splitMode)
-            putString("hamlibHost", settings.hamlibHost)
-            putInt("hamlibPort", settings.hamlibPort)
             putString("hamlibRxVfo", settings.hamlibRxVfo)
             putString("hamlibTxVfo", settings.hamlibTxVfo)
             putInt("usbModelId", settings.usbModelId)
             putString("usbDeviceName", settings.usbDeviceName)
-            putInt("usbPort", settings.usbPort)
             putInt("usbBaud", settings.usbBaud)
             putInt("usbDataBits", settings.usbDataBits)
             putInt("usbStopBits", settings.usbStopBits)
@@ -487,21 +484,18 @@ class SettingsRepo(
     }
 
     private fun getRadioControlSettings(): RadioControlSettings = RadioControlSettings(
-        enabled = preferences.getBoolean(keyRadioControlEnabled, false),
-        radioModel = preferences.getString(keyRadioModel, null) ?: RadioControlSettings.MODEL_YAESU_FT817,
+        enabled = preferences.getBoolean(keyRadioControlEnabled, false) && preferences.getString(keyRadioModel, null) != "Hamlib TCP",
+        radioModel = preferences.getString(keyRadioModel, null)?.let { if (it == "Hamlib TCP") RadioControlSettings.MODEL_HAMLIB_USB else it } ?: RadioControlSettings.MODEL_YAESU_FT817,
         txRadioAddress = preferences.getString(keyTxRadioAddress, null) ?: "",
         rxRadioAddress = preferences.getString(keyRxRadioAddress, null) ?: "",
         txRadioName = preferences.getString(keyTxRadioName, null) ?: "TX Radio",
         rxRadioName = preferences.getString(keyRxRadioName, null) ?: "RX Radio",
         baudRate = preferences.getInt(keyRadioBaudRate, 4800),
         splitMode = preferences.getBoolean(keyRadioSplitMode, false),
-        hamlibHost = preferences.getString("hamlibHost", "") ?: "",
-        hamlibPort = preferences.getInt("hamlibPort", 4532),
         hamlibRxVfo = preferences.getString("hamlibRxVfo", "Main") ?: "Main",
         hamlibTxVfo = preferences.getString("hamlibTxVfo", "Sub") ?: "Sub",
         usbModelId = preferences.getInt("usbModelId", 3044),
         usbDeviceName = preferences.getString("usbDeviceName", "") ?: "",
-        usbPort = preferences.getInt("usbPort", 0),
         usbBaud = preferences.getInt("usbBaud", 19200),
         usbDataBits = preferences.getInt("usbDataBits", 8),
         usbStopBits = preferences.getInt("usbStopBits", 1),

@@ -242,19 +242,26 @@
     <!-- Main screen -->
     <string name="tracking_format">跟踪：%s</string>
 
-    <string name="hamlib_help">连接电脑上的 rigctld（不加 --vfo）。型号和串口在服务端配置。IC-910 请核对 Main/Sub 收发对应关系。本版仅自动调频，手动调谐前请停止跟踪。仅在可信局域网使用。</string>
-    <string name="hamlib_host">Hamlib 主机（IP）</string>
-    <string name="hamlib_port">TCP 端口（默认 4532）</string>
-    <string name="hamlib_invalid">请填写有效主机和端口，RX/TX VFO 不能相同。</string>
-    <string name="usb_help">Local USB uses bundled Hamlib. IC-910: 3044, 19200 8N1, CI-V 60. Match the radio menu. Android 9+ ARM only.</string>
-    <string name="usb_native_missing">Bundled Hamlib unavailable on this device/build.</string>
-    <string name="usb_model_search">Search Hamlib model / ID</string>
-    <string name="usb_device">USB serial device</string>
-    <string name="usb_no_device">No USB device. Connect the OTG serial adapter.</string>
-    <string name="usb_authorize">Grant USB access</string>
-    <string name="usb_authorized">USB authorized</string>
-    <string name="usb_port">USB port index</string>
-    <string name="usb_baud">Serial baud rate</string>
-    <string name="usb_lines_warning">DTR/RTS may key an interface. Keep OFF unless required. Flow control: None.</string>
-    <string name="usb_civ">CI-V address (hex; blank = model default)</string>
+    <string name="usb_help">通过 OTG 和 USB CAT / CI-V 控制线连接电台，无需网络服务器。</string>
+    <string name="usb_native_missing">Hamlib 不可用，USB 控制需要 Android 9 及以上的 ARM 设备。</string>
+    <string name="usb_model_search">搜索品牌或型号，例如 IC-910</string>
+    <string name="usb_device">2. USB 控制线</string>
+    <string name="usb_no_device">未检测到 USB 设备，请插入 OTG 控制线。</string>
+    <string name="usb_authorize">授权访问 USB</string>
+    <string name="usb_authorized">USB 已授权</string>
+    <string name="usb_baud">波特率</string>
+    <string name="usb_lines_warning">DTR/RTS 可能触发发射，除非控制线明确要求，请保持关闭。不使用硬件流控。</string>
+    <string name="usb_civ">CI-V 地址（十六进制；留空使用型号默认值）</string>
+    <string name="usb_step_model">1. 选择电台型号</string>
+    <string name="usb_choose_model">选择电台型号</string>
+    <string name="usb_no_models">没有匹配的电台型号</string>
+    <string name="usb_auto_port">连接时自动读取电台频率，识别 CAT 端口，无需填写端口号。</string>
+    <string name="usb_step_serial">3. 与电台菜单保持一致</string>
+    <string name="usb_advanced">展开 / 收起高级串口设置</string>
+    <string name="usb_data_bits">数据位</string>
+    <string name="usb_stop_bits">停止位</string>
+    <string name="usb_parity">校验方式</string>
+    <string name="usb_parity_none">无校验</string>
+    <string name="usb_parity_odd">奇校验</string>
+    <string name="usb_parity_even">偶校验</string>
 </resources>

@@ -3,6 +3,11 @@
 import android.app.PendingIntent
 import android.content.Intent
 import android.hardware.usb.UsbManager
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -38,6 +43,8 @@ internal fun HamlibUsbSettings(
     var devices by remember { mutableStateOf(manager.deviceList.values.toList()) }
     var permitted by remember { mutableStateOf(false) }
     var search by remember { mutableStateOf("") }
+    var choosingModel by remember { mutableStateOf(false) }
+    var advanced by remember { mutableStateOf(false) }
     // Enumerating USB devices is cheap; poll only while the settings sheet is composed.
     LaunchedEffect(settings.usbDeviceName) {
         while (true) {
@@ -48,21 +55,38 @@ internal fun HamlibUsbSettings(
     }
     Text(stringResource(R.string.usb_help))
     if (models.isEmpty()) Text(stringResource(R.string.usb_native_missing), color = MaterialTheme.colorScheme.error)
-    Text("${settings.usbModelId}: ${models.find { it.first == settings.usbModelId }?.second ?: "IC-910"}")
-    OutlinedTextField(value = search, onValueChange = { search = it }, singleLine = true,
-        label = { Text(stringResource(R.string.usb_model_search)) }, modifier = Modifier.fillMaxWidth())
-    if (search.isNotBlank()) {
-        models.filter { it.second.contains(search, true) || it.first.toString() == search }.take(15).forEach { (id, label) ->
-            FilterChip(selected = settings.usbModelId == id, label = { Text("$id $label") },
-                onClick = { onChange(settings.copy(usbModelId = id, civAddress = "")); search = "" })
-        }
+    Text(stringResource(R.string.usb_step_model), style = MaterialTheme.typography.titleMedium)
+    OutlinedButton(onClick = { choosingModel = true }, enabled = models.isNotEmpty(), modifier = Modifier.fillMaxWidth()) {
+        Text(models.find { it.first == settings.usbModelId }?.second ?: stringResource(R.string.usb_choose_model))
     }
+    if (choosingModel) AlertDialog(
+        onDismissRequest = { choosingModel = false },
+        title = { Text(stringResource(R.string.usb_choose_model)) },
+        confirmButton = { TextButton(onClick = { choosingModel = false }) { Text(stringResource(android.R.string.cancel)) } },
+        text = {
+            androidx.compose.foundation.layout.Column {
+                OutlinedTextField(value = search, onValueChange = { search = it }, singleLine = true,
+                    label = { Text(stringResource(R.string.usb_model_search)) }, modifier = Modifier.fillMaxWidth())
+                val filtered = models.filter { it.second.contains(search.trim(), true) }
+                if (filtered.isEmpty()) Text(stringResource(R.string.usb_no_models))
+                LazyColumn(modifier = Modifier.heightIn(max = 360.dp)) {
+                    items(filtered, key = { it.first }) { (id, label) ->
+                        TextButton(onClick = {
+                            onChange(settings.copy(usbModelId = id, civAddress = ""))
+                            choosingModel = false
+                            search = ""
+                        }, modifier = Modifier.fillMaxWidth()) { Text(label) }
+                    }
+                }
+            }
+        }
+    )
     Text(stringResource(R.string.usb_device))
     if (devices.isEmpty()) Text(stringResource(R.string.usb_no_device))
     devices.forEach { device ->
-        val label = "${device.productName ?: "USB"} ${device.vendorId.toString(16)}:${device.productId.toString(16)} ${device.deviceName}"
+        val label = "${runCatching { device.productName }.getOrNull() ?: "USB"} (${device.vendorId.toString(16)}:${device.productId.toString(16)})"
         FilterChip(selected = device.deviceName == settings.usbDeviceName, label = { Text(label) },
-            onClick = { onChange(settings.copy(usbDeviceName = device.deviceName, usbPort = 0)) })
+            onClick = { onChange(settings.copy(usbDeviceName = device.deviceName)) })
     }
     OutlinedButton(enabled = devices.any { it.deviceName == settings.usbDeviceName } && !permitted,
         onClick = {
@@ -72,12 +96,22 @@ internal fun HamlibUsbSettings(
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
             }
         }) { Text(stringResource(if (permitted) R.string.usb_authorized else R.string.usb_authorize)) }
-    UsbNumberField(stringResource(R.string.usb_port), settings.usbPort) { if (it in 0..15) onChange(settings.copy(usbPort = it)) }
-    UsbNumberField(stringResource(R.string.usb_baud), settings.usbBaud) { if (it in 1..921600) onChange(settings.copy(usbBaud = it)) }
-    UsbOptions("Data bits", listOf(7, 8), settings.usbDataBits) { onChange(settings.copy(usbDataBits = it)) }
-    UsbOptions("Stop bits", listOf(1, 2), settings.usbStopBits) { onChange(settings.copy(usbStopBits = it)) }
-    Text("Parity: 0=None, 1=Odd, 2=Even")
-    UsbOptions("Parity", listOf(0, 1, 2), settings.usbParity) { onChange(settings.copy(usbParity = it)) }
+    Text(stringResource(R.string.usb_auto_port))
+    Text(stringResource(R.string.usb_step_serial), style = MaterialTheme.typography.titleMedium)
+    UsbOptions(stringResource(R.string.usb_baud), listOf(1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200), settings.usbBaud) {
+        onChange(settings.copy(usbBaud = it))
+    }
+    TextButton(onClick = { advanced = !advanced }) { Text(stringResource(R.string.usb_advanced)) }
+    if (advanced) {
+    UsbOptions(stringResource(R.string.usb_data_bits), listOf(7, 8), settings.usbDataBits) { onChange(settings.copy(usbDataBits = it)) }
+    UsbOptions(stringResource(R.string.usb_stop_bits), listOf(1, 2), settings.usbStopBits) { onChange(settings.copy(usbStopBits = it)) }
+    Text(stringResource(R.string.usb_parity))
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        listOf(R.string.usb_parity_none, R.string.usb_parity_odd, R.string.usb_parity_even).forEachIndexed { index, label ->
+            FilterChip(selected = settings.usbParity == index, onClick = { onChange(settings.copy(usbParity = index)) },
+                label = { Text(stringResource(label)) })
+        }
+    }
     Text(stringResource(R.string.usb_lines_warning))
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("DTR")
@@ -85,16 +119,10 @@ internal fun HamlibUsbSettings(
         Text("RTS")
         Switch(checked = settings.usbRts, onCheckedChange = { onChange(settings.copy(usbRts = it)) })
     }
+    }
     OutlinedTextField(value = settings.civAddress, onValueChange = {
         if (it.length <= 2 && it.all { c -> c.digitToIntOrNull(16) != null }) onChange(settings.copy(civAddress = it))
     }, label = { Text(stringResource(R.string.usb_civ)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
-}
-
-@Composable
-private fun UsbNumberField(label: String, value: Int, onChange: (Int) -> Unit) {
-    var text by remember(value) { mutableStateOf(value.toString()) }
-    OutlinedTextField(value = text, onValueChange = { text = it; it.toIntOrNull()?.let(onChange) },
-        label = { Text(label) }, singleLine = true, modifier = Modifier.fillMaxWidth())
 }
 
 @Composable

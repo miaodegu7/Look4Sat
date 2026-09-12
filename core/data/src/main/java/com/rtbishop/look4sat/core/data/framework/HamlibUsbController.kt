@@ -37,21 +37,29 @@ class HamlibUsbController(
             disconnectLocked()
             try {
                 check(HamlibNative.available) { "Bundled Hamlib requires Android 9+ and a supported ARM CPU" }
-                val device = usbManager.deviceList[settings.usbDeviceName]
-                    ?: error("Selected USB device is not attached")
-                check(usbManager.hasPermission(device)) { "USB permission is required; reopen Radio Control settings" }
-                val driver = UsbSerialProber.getDefaultProber().probeDevice(device)
-                    ?: error("Unsupported USB serial adapter")
-                val port = driver.ports.getOrNull(settings.usbPort)
-                    ?: error("USB serial port ${settings.usbPort} is unavailable")
-                val connection = usbManager.openDevice(device) ?: error("Could not open USB device")
-                val usbBridge = UsbSerialBridge(port, connection, settings)
-                bridge = usbBridge
-                usbBridge.start()
+                val drivers = UsbSerialProber.getDefaultProber().findAllDrivers(usbManager)
+                val driver = drivers.find { it.device.deviceName == settings.usbDeviceName }
+                    ?: drivers.singleOrNull() ?: error("Select a USB serial adapter in Radio Control settings")
+                check(usbManager.hasPermission(driver.device)) { "USB permission is required; reopen Radio Control settings" }
                 val civ = settings.civAddress.trim().removePrefix("0x")
                 if (civ.isNotEmpty()) require(civ.toInt(16) in 0..255) { "CI-V address must be hexadecimal 00-FF" }
-                handle = HamlibNative.open(settings.usbModelId, usbBridge.port, if (civ.isEmpty()) "" else "0x$civ")
-                check(handle != 0L) { "Hamlib could not open the radio" }
+                // Probe with a frequency read only: never tune or key a radio to identify its CAT port.
+                var failure: Exception? = null
+                for (port in driver.ports) {
+                    try {
+                        val connection = usbManager.openDevice(driver.device) ?: error("Could not open USB device")
+                        val usbBridge = UsbSerialBridge(port, connection, settings)
+                        bridge = usbBridge
+                        usbBridge.start()
+                        handle = HamlibNative.open(settings.usbModelId, usbBridge.port, if (civ.isEmpty()) "" else "0x$civ")
+                        check(handle != 0L && HamlibNative.command(handle, 1, 0, "") > 0) { "Radio did not report its frequency" }
+                        break
+                    } catch (e: Exception) {
+                        failure = e
+                        disconnectLocked()
+                    }
+                }
+                check(handle != 0L) { "No CAT port responded. Check radio model, baud rate and CI-V address. ${failure?.message.orEmpty()}" }
                 lastError = null
                 true
             } catch (e: Exception) {

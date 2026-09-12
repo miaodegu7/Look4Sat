@@ -30,7 +30,6 @@ import com.rtbishop.look4sat.core.data.framework.HamlibNative
 import com.rtbishop.look4sat.core.data.framework.HamlibUsbController
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import com.rtbishop.look4sat.core.data.framework.HamlibRadioController
 import com.rtbishop.look4sat.core.data.framework.Ic705Controller
 import com.rtbishop.look4sat.core.data.framework.NetworkReporter
 import com.rtbishop.look4sat.core.data.framework.RadioTrackingService
@@ -122,8 +121,6 @@ class MainContainer(private val context: Context) : IMainContainer {
         val address  = settings.txRadioAddress
         return if (settings.radioModel == RadioControlSettings.MODEL_HAMLIB_USB) {
             HamlibUsbController(appScope, context.getSystemService(android.hardware.usb.UsbManager::class.java), settings)
-        } else if (settings.radioModel == RadioControlSettings.MODEL_HAMLIB) {
-            HamlibRadioController(settings)
         } else if (settings.radioModel == RadioControlSettings.MODEL_ICOM_IC705) {
             Ic705Controller(manager, address)
         } else {
@@ -137,8 +134,6 @@ class MainContainer(private val context: Context) : IMainContainer {
         val address  = settings.rxRadioAddress
         return if (settings.radioModel == RadioControlSettings.MODEL_HAMLIB_USB) {
             HamlibUsbController(appScope, context.getSystemService(android.hardware.usb.UsbManager::class.java), settings)
-        } else if (settings.radioModel == RadioControlSettings.MODEL_HAMLIB) {
-            HamlibRadioController(settings)
         } else if (settings.radioModel == RadioControlSettings.MODEL_ICOM_IC705) {
             Ic705Controller(manager, address)
         } else {

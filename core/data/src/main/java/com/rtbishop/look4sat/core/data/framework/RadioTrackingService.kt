@@ -76,15 +76,6 @@ class RadioTrackingService(
                 errorMessage = if (connected) null else radio.lastError) }
             return
         }
-        if (rcSettings.radioModel == RadioControlSettings.MODEL_HAMLIB) {
-            val radio = HamlibRadioController(rcSettings)
-            txController = radio
-            rxController = null
-            val connected = radio.connect()
-            _state.update { it.copy(txConnected = connected, rxConnected = connected,
-                errorMessage = if (connected) null else radio.lastError) }
-            return
-        }
         val txAddr     = rcSettings.txRadioAddress
         val rxAddr     = rcSettings.rxRadioAddress
         val isIcom     = rcSettings.radioModel == RadioControlSettings.MODEL_ICOM_IC705
@@ -170,8 +161,7 @@ class RadioTrackingService(
         val isIcom     = rcSettings.radioModel == RadioControlSettings.MODEL_ICOM_IC705
         val isSplit    = isIcom && rcSettings.splitMode
 
-        if (rcSettings.radioModel == RadioControlSettings.MODEL_HAMLIB ||
-            rcSettings.radioModel == RadioControlSettings.MODEL_HAMLIB_USB) {
+        if (rcSettings.radioModel == RadioControlSettings.MODEL_HAMLIB_USB) {
             trackingJob = appScope.launch { runHamlibTracking(transponder) }
         } else if (isSplit) {
             trackingJob = appScope.launch { runSplitTracking(transponder, txBaseFreqHz) }

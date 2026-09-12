@@ -282,12 +282,12 @@ fun DataSourcesDialog(
                     CardButton(
                         onClick = { onImportTle(); onDismiss() },
                         text = "TLE/3LE (.txt)\nOMM (.csv)",
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
                     )
                     CardButton(
                         onClick = { onImportTransceivers(); onDismiss() },
                         text = "Transceivers\nSatNOGS (.json)",
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
                     )
                 }
             }
@@ -898,22 +898,15 @@ fun RadioControlDialog(
     val baudRate = rememberSaveable { mutableIntStateOf(initialSettings.baudRate) }
     val selectingFor = rememberSaveable { mutableStateOf("") } // "tx", "rx", or ""
 
-    val hamlibHost = rememberSaveable { mutableStateOf(initialSettings.hamlibHost) }
-    val hamlibPort = rememberSaveable { mutableStateOf(initialSettings.hamlibPort.toString()) }
     val hamlibRxVfo = rememberSaveable { mutableStateOf(initialSettings.hamlibRxVfo) }
     val hamlibTxVfo = rememberSaveable { mutableStateOf(initialSettings.hamlibTxVfo) }
     val usb = remember { mutableStateOf(initialSettings) }
     val isUsb = radioModel.value == RadioControlSettings.MODEL_HAMLIB_USB
-    val isHamlib = radioModel.value == RadioControlSettings.MODEL_HAMLIB
-    val validHamlib = hamlibHost.value.isNotBlank() &&
-        hamlibHost.value.none { it.isWhitespace() || it == '/' } &&
-        hamlibPort.value.toIntOrNull() in 1..65535 &&
-        (!splitMode.value || hamlibRxVfo.value != hamlibTxVfo.value)
     val isIcom = radioModel.value == RadioControlSettings.MODEL_ICOM_IC705
-    val isSingleRadio = (isIcom || isHamlib || isUsb) && splitMode.value
+    val isSingleRadio = (isIcom || isUsb) && splitMode.value
 
     // Reset split mode when switching away from IC-705
-    if (!isIcom && !isHamlib && !isUsb && splitMode.value) splitMode.value = false
+    if (!isIcom && !isUsb && splitMode.value) splitMode.value = false
 
     val baudRates = if (isIcom) RadioControlSettings.BAUD_RATES_ICOM
     else RadioControlSettings.BAUD_RATES_YAESU
@@ -922,7 +915,7 @@ fun RadioControlDialog(
     if (baudRate.intValue !in baudRates) baudRate.intValue = baudRates.first()
 
     val onAccept: () -> Unit = {
-        if (!isHamlib || !enabled.value || validHamlib) {
+        if (!isUsb || !enabled.value || (!splitMode.value || hamlibRxVfo.value != hamlibTxVfo.value)) {
         onSave(
             RadioControlSettings(
                 enabled = enabled.value,
@@ -933,13 +926,10 @@ fun RadioControlDialog(
                 rxRadioName = if (isSingleRadio) "" else rxName.value,
                 baudRate = baudRate.intValue,
                 splitMode = splitMode.value,
-                hamlibHost = hamlibHost.value.trim(),
-                hamlibPort = hamlibPort.value.toIntOrNull() ?: 4532,
                 hamlibRxVfo = hamlibRxVfo.value,
                 hamlibTxVfo = hamlibTxVfo.value,
                 usbModelId = usb.value.usbModelId,
                 usbDeviceName = usb.value.usbDeviceName,
-                usbPort = usb.value.usbPort,
                 usbBaud = usb.value.usbBaud,
                 usbDataBits = usb.value.usbDataBits,
                 usbStopBits = usb.value.usbStopBits,
@@ -992,13 +982,13 @@ fun RadioControlDialog(
                             )
                         },
                         enabled = enabled.value,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
                     )
                 }
             }
             Spacer(modifier = Modifier.height(6.dp))
 
-            val isSplitModeAvailable = enabled.value && (isIcom || isHamlib || isUsb)
+            val isSplitModeAvailable = enabled.value && (isIcom || isUsb)
             val splitModeLabelColor = if (isSplitModeAvailable) {
                 MaterialTheme.colorScheme.onSurface
             } else {
@@ -1033,27 +1023,6 @@ fun RadioControlDialog(
                         }
                     }
                 }
-            } else if (isHamlib) {
-                Text(stringResource(R.string.hamlib_help), fontSize = 13.sp)
-                OutlinedTextField(value = hamlibHost.value,
-                    onValueChange = { hamlibHost.value = it },
-                    label = { Text(stringResource(R.string.hamlib_host)) },
-                    singleLine = true, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = hamlibPort.value,
-                    onValueChange = { hamlibPort.value = it },
-                    label = { Text(stringResource(R.string.hamlib_port)) },
-                    singleLine = true, modifier = Modifier.fillMaxWidth())
-                listOf("RX" to hamlibRxVfo, "TX" to hamlibTxVfo).forEach { (label, state) ->
-                    Text("$label VFO")
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        RadioControlSettings.HAMLIB_VFOS.forEach { vfo ->
-                            FilterChip(selected = state.value == vfo,
-                                onClick = { state.value = vfo }, label = { Text(vfo) })
-                        }
-                    }
-                }
-                if (!validHamlib) Text(stringResource(R.string.hamlib_invalid),
-                    color = MaterialTheme.colorScheme.error)
             } else {
             Text("Radio devices", fontWeight = FontWeight.Medium)
             Row(
@@ -1146,7 +1115,7 @@ fun RadioControlDialog(
                             )
                         },
                         enabled = enabled.value,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
                     )
                 }
             }
